@@ -155,6 +155,16 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
     {
         if (event != ButtonEvent.DOWN)
             return;
+        if (index == 0 && this.surface.isShiftPressed () && this.isPush2Browser ())
+        {
+            this.getFilterColumn (0).filter (IBrowserColumn::doesExist).ifPresent (column -> {
+                column.selectFirstChild ();
+                this.filterColumn = 0;
+                this.selectionMode = SELECTION_FILTER;
+            });
+            return;
+        }
+
 
         if (this.surface.isShiftPressed () && index == 7)
         {
@@ -175,6 +185,16 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
     {
         if (event != ButtonEvent.DOWN)
             return;
+        if (index == 0 && this.surface.isShiftPressed () && this.isPush2Browser ())
+        {
+            this.getFilterColumn (0).filter (IBrowserColumn::doesExist).ifPresent (column -> {
+                column.selectParent ();
+                this.filterColumn = 0;
+                this.selectionMode = SELECTION_FILTER;
+            });
+            return;
+        }
+
         if (this.isPushModern)
             this.selectPrevious (index, 1);
         else
@@ -456,6 +476,11 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
     }
 
 
+    private boolean isPush2Browser ()
+    {
+        return this.surface.getConfiguration ().getPushVersion () == de.mossgrabers.controller.ableton.push.PushVersion.VERSION_2;
+    }
+
     private void selectNext (final int index, final int count)
     {
         final IBrowser browser = this.model.getBrowser ();
@@ -468,6 +493,8 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
                 if (fi < 0)
                     return;
                 this.filterColumn = fi;
+                if (fi == 0 && this.isPush2Browser () && LocationOrder.step (fc.get (), count))
+                    return;
                 for (int i = 0; i < count; i++)
                     browser.selectNextFilterItem (this.filterColumn);
             }
@@ -492,6 +519,8 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
                 if (fi < 0)
                     return;
                 this.filterColumn = fi;
+                if (fi == 0 && this.isPush2Browser () && LocationOrder.step (fc.get (), -count))
+                    return;
                 for (int j = 0; j < count; j++)
                     browser.selectPreviousFilterItem (this.filterColumn);
             }

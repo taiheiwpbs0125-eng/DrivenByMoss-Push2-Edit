@@ -12,7 +12,6 @@ import de.mossgrabers.framework.observer.IValueObserver;
 import com.bitwig.extension.controller.api.BrowserFilterColumn;
 import com.bitwig.extension.controller.api.BrowserItemBank;
 import com.bitwig.extension.controller.api.CursorBrowserFilterItem;
-import com.bitwig.extension.controller.api.CursorBrowserItem;
 
 
 /**
@@ -45,14 +44,14 @@ public class BrowserColumnImpl extends AbstractItemImpl implements IBrowserColum
         column.name ().markInterested ();
         column.getWildcardItem ().name ().markInterested ();
 
-        this.itemBank = ((CursorBrowserItem) column.createCursorItem ()).createSiblingsBank (numFilterColumnEntries);
+        this.cursorResult = (CursorBrowserFilterItem) column.createCursorItem ();
+        this.itemBank = this.cursorResult.createSiblingsBank (numFilterColumnEntries);
         this.itemBank.cursorIndex ().markInterested ();
 
         this.items = new IBrowserColumnItem [numFilterColumnEntries];
         for (int i = 0; i < numFilterColumnEntries; i++)
             this.items[i] = new BrowserColumnItemImpl (this.itemBank.getItemAt (i), i);
 
-        this.cursorResult = (CursorBrowserFilterItem) column.createCursorItem ();
         this.cursorResult.exists ().markInterested ();
         this.cursorResult.name ().markInterested ();
     }
@@ -172,6 +171,18 @@ public class BrowserColumnImpl extends AbstractItemImpl implements IBrowserColum
 
 
     /** {@inheritDoc} */
+    @Override
+    public void selectParent ()
+    {
+        this.cursorResult.selectParent ();
+    }
+
+    @Override
+    public void selectFirstChild ()
+    {
+        this.cursorResult.selectFirstChild ();
+    }
+
     @Override
     public void selectPreviousItem ()
     {

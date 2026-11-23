@@ -81,6 +81,10 @@ public interface IBrowserColumn extends IItem
      */
     void selectNextItem ();
 
+    void selectParent ();
+
+    void selectFirstChild ();
+
 
     /**
      * Get the index of the cursor item.

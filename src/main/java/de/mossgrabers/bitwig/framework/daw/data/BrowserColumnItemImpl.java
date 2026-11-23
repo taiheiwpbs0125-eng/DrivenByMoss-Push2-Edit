@@ -89,6 +89,12 @@ public class BrowserColumnItemImpl extends AbstractItemImpl implements IBrowserC
 
     /** {@inheritDoc} */
     @Override
+    public void select ()
+    {
+        this.item.isSelected ().set (true);
+    }
+
+    @Override
     public boolean isSelected ()
     {
         return this.item.isSelected ().get ();
