@@ -34,6 +34,8 @@ public class BrowserColumnImpl extends AbstractItemImpl implements IBrowserColum
      * @param index The index of the column
      * @param numFilterColumnEntries The number of entries in a filter column (bank page)
      */
+    private final IBrowserColumnItem [] columnEntries;
+
     public BrowserColumnImpl (final BrowserFilterColumn column, final int index, final int numFilterColumnEntries)
     {
         super (index);
@@ -52,6 +54,16 @@ public class BrowserColumnImpl extends AbstractItemImpl implements IBrowserColum
         for (int i = 0; i < numFilterColumnEntries; i++)
             this.items[i] = new BrowserColumnItemImpl (this.itemBank.getItemAt (i), i);
 
+        // The File Type cursor may sit on a wildcard without visible siblings.
+        this.columnEntries = index == 1 ? new IBrowserColumnItem[numFilterColumnEntries] : this.items;
+        if (index == 1)
+        {
+            column.entryCount ().markInterested ();
+            final var bank = column.createItemBank (numFilterColumnEntries);
+            for (int i = 0; i < numFilterColumnEntries; i++)
+                this.columnEntries[i] = new BrowserColumnItemImpl (bank.getItemAt (i), i);
+        }
+
         this.cursorResult.exists ().markInterested ();
         this.cursorResult.name ().markInterested ();
     }
@@ -66,6 +78,12 @@ public class BrowserColumnImpl extends AbstractItemImpl implements IBrowserColum
         Util.setIsSubscribed (this.column.getWildcardItem ().name (), enable);
         Util.setIsSubscribed (this.itemBank.cursorIndex (), enable);
 
+        if (this.columnEntries != this.items)
+        {
+            Util.setIsSubscribed (this.column.entryCount (), enable);
+            for (final IBrowserColumnItem item: this.columnEntries)
+                item.enableObservers (enable);
+        }
         for (final IBrowserColumnItem item: this.items)
             item.enableObservers (enable);
 
@@ -147,6 +165,12 @@ public class BrowserColumnImpl extends AbstractItemImpl implements IBrowserColum
 
 
     /** {@inheritDoc} */
+    @Override
+    public IBrowserColumnItem [] getColumnEntries () { return this.columnEntries; }
+
+    @Override
+    public int getEntryCount () { return this.columnEntries == this.items ? -1 : this.column.entryCount ().get (); }
+
     @Override
     public void scrollItemPageUp ()
     {

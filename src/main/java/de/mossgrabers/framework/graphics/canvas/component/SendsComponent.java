@@ -86,8 +86,8 @@ public class SendsComponent extends ChannelSelectComponent
         final double sliderHeight = sendRowHeight - 2 * separatorSize;
 
         // Background of slider area
-        final ColorEx backgroundColor = this.modifyIfOff (true, configuration.getColorBackground ());
-        gc.fillRectangle (this.isExMode ? left - separatorSize : left, t, this.isExMode ? width + separatorSize : width, this.isExMode ? h - 2 : h, this.footer.isSelected () || this.isExMode ? this.modifyIfOff (true, configuration.getColorBackgroundLighter ()) : backgroundColor);
+        final ColorEx backgroundColor = this.modifyIfOff (true, configuration.getMixerPanelColor (this.footer.isSelected () || this.isExMode));
+        gc.fillRectangle (this.isExMode ? left - separatorSize : left, t, this.isExMode ? width + separatorSize : width, this.isExMode ? h - 2 : h, backgroundColor);
 
         double topy = menuHeight + (this.isExMode ? 0 : separatorSize);
 

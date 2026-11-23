@@ -151,10 +151,10 @@ public class ChannelComponent extends ChannelSelectComponent
         if (name == null || name.length () == 0)
             return;
 
-        final ColorEx backgroundColor = this.modifyIfOff (configuration.getColorBackground ());
+        final ColorEx backgroundColor = this.modifyIfOff (configuration.getMixerPanelColor (this.footer.isSelected ()));
 
         // Draw the background
-        gc.fillRectangle (left, menuHeight + 1, width, trackRowTop - (menuHeight - 1), this.footer.isSelected () ? this.modifyIfOff (configuration.getColorBackgroundLighter ()) : backgroundColor);
+        gc.fillRectangle (left, menuHeight + 1, width, trackRowTop - (menuHeight - 1), backgroundColor);
 
         // Background of pan and slider area
         final ColorEx borderColor = this.modifyIfOff (configuration.getColorBorder ());

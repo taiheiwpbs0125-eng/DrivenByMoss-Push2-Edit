@@ -1267,6 +1267,14 @@ public class PushConfiguration extends AbstractConfiguration implements IGraphic
 
     /** {@inheritDoc} */
     @Override
+    public ColorEx getMixerPanelColor (final boolean selected)
+    {
+        if (this.pushVersion == PushVersion.VERSION_2)
+            return selected ? ORANGE_THEME_BACKGROUND : ORANGE_THEME_BACKGROUND_DARKER;
+        return selected ? this.getColorBackgroundLighter () : this.getColorBackground ();
+    }
+
+    @Override
     public boolean usesCompactOrangeDisplay () { return this.pushVersion == PushVersion.VERSION_2; }
 
     @Override

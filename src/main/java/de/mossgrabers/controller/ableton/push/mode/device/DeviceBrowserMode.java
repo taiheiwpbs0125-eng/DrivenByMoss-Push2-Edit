@@ -132,6 +132,14 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
             return;
         }
 
+        if (index == 1 && this.isPush2Browser ())
+        {
+            final var browser = this.model.getBrowser ();
+            final var column = browser.getFilterColumn (1);
+            this.model.getHost ().println ("Push2 file kind: column=" + column.getName () + ", count=" + column.getEntryCount () +
+                ", cursor=" + column.getCursorName () + ", siblings=" + FileKinds.names (column.getItems ()) +
+                ", entries=" + FileKinds.names (column.getColumnEntries ()) + ", contentTypes=" + java.util.Arrays.toString (browser.getContentTypeNames ()));
+        }
         if (index == 7)
         {
             this.selectionMode = DeviceBrowserMode.SELECTION_PRESET;
@@ -493,6 +501,8 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
                 if (fi < 0)
                     return;
                 this.filterColumn = fi;
+                if (fi == 1 && this.isPush2Browser () && FileKinds.step (fc.get (), count))
+                    return;
                 if (fi == 0 && this.isPush2Browser () && LocationOrder.step (fc.get (), count))
                     return;
                 for (int i = 0; i < count; i++)
@@ -519,6 +529,8 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
                 if (fi < 0)
                     return;
                 this.filterColumn = fi;
+                if (fi == 1 && this.isPush2Browser () && FileKinds.step (fc.get (), -count))
+                    return;
                 if (fi == 0 && this.isPush2Browser () && LocationOrder.step (fc.get (), -count))
                     return;
                 for (int j = 0; j < count; j++)

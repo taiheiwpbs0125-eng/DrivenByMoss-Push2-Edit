@@ -31,6 +31,11 @@ public interface IGraphicsConfiguration
      */
     ColorEx getColorBackground ();
 
+    default ColorEx getMixerPanelColor (final boolean selected)
+    {
+        return selected ? getColorBackgroundLighter () : getColorBackground ();
+    }
+
 
     /**
      * Get the background darker color of an element.

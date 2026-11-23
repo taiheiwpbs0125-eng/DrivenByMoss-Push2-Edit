@@ -51,6 +51,10 @@ public interface IBrowserColumn extends IItem
      */
     IBrowserColumnItem [] getItems ();
 
+    default IBrowserColumnItem [] getColumnEntries () { return getItems (); }
+
+    default int getEntryCount () { return -1; }
+
 
     /**
      * Scroll up the items by one page.

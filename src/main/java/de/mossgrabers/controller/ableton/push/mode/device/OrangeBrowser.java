@@ -18,7 +18,7 @@ record OrangeBrowser(List<String> headings, List<String> filters, List<String> i
     private static final ColorEx BAND = ColorEx.fromRGB(56,48,44);
     private static final ColorEx INK = ColorEx.fromRGB(249,242,234);
     private static final ColorEx ORANGE = ColorEx.fromRGB(255,132,46);
-    private static final List<String> LABELS = List.of("場所","形式","カテゴリ","タグ","制作者","機器種別","デバイス");
+    private static final List<String> LABELS = List.of("場所","ファイル種類","カテゴリ","タグ","制作者","機器種別","デバイス");
     private static final FontRenderContext METRICS = new FontRenderContext(null,true,true);
     private static final Font FONT = new Font("Meiryo",Font.PLAIN,12);
 
@@ -43,6 +43,7 @@ record OrangeBrowser(List<String> headings, List<String> filters, List<String> i
         int selected = -1;
         if (focus >= 0) {
             IBrowserColumnItem[] entries = focus==7 ? browser.getResultColumnItems() : browser.getFilterColumn(focus).getItems();
+            if (focus == 1) entries = FileKinds.visible (browser.getFilterColumn (1));
             if (focus == 0) entries = LocationOrder.visible (browser.getFilterColumn (0));
             for (int i=0; i<Math.min(48,entries.length); i++) {
                 var item=entries[i];
@@ -54,7 +55,7 @@ record OrangeBrowser(List<String> headings, List<String> filters, List<String> i
         if (focus == 0 && !headings.get(0).isBlank()) headings.set(0,"Shift↑子 ↓親");
         boolean empty = focus>=0 && items.stream().allMatch(String::isBlank);
         if (empty) title="候補なし";
-        if (focus == 1 && !empty && java.util.Arrays.stream(browser.getFilterColumn(1).getItems())
+        if (focus == 1 && !empty && java.util.Arrays.stream(FileKinds.visible(browser.getFilterColumn(1)))
                 .filter(IBrowserColumnItem::doesExist).allMatch(item -> item.getName().equals(browser.getFilterColumn(1).getWildcard())))
             title="形式指定なし　プラグインはノブ1「場所」へ";
         String context=String.join("  ",java.util.Objects.toString(browser.getInfoText(),""),java.util.Objects.toString(browser.getSelectedContentType(),"")).strip();
