@@ -67,6 +67,16 @@ public class OptionsComponent implements IComponent
         final double menuHeight = 2 * dimensions.getMenuHeight ();
         final IGraphicsConfiguration configuration = info.getConfiguration ();
 
+        if (configuration.usesCompactOrangeDisplay ())
+        {
+            final var b = info.getBounds ();
+            gc.fillRectangle (b.left (), 0, b.width (), b.height (), configuration.getColorBackgroundDarker ());
+            this.header.draw (info.withBounds (0, 17));
+            this.footer.draw (info.withBounds (b.height () - 17, 17));
+            this.drawCaption (info, this.headerTop, 26, false);
+            this.drawCaption (info, this.headerBottom, 91, this.isBottomHeaderSelected);
+            return;
+        }
         this.header.draw (info.withBounds (0, menuHeight));
 
         final IBounds bounds = info.getBounds ();
@@ -98,6 +108,28 @@ public class OptionsComponent implements IComponent
         }
     }
 
+
+    private void drawCaption (final IGraphicsInfo info, final String text, final double y, final boolean selected)
+    {
+        if (text == null || text.isBlank ()) return;
+        final var b = info.getBounds ();
+        final var gc = info.getContext ();
+        final var cfg = info.getConfiguration ();
+        final ColorEx fill = selected ? cfg.getColorEdit () : cfg.getColorBackground ();
+        final ColorEx ink = ColorEx.calcContrastColor (fill);
+        final double width = b.width () - 14;
+        gc.fillRoundedRectangle (b.left () + 2, y, b.width () - 4, 42, 3, fill);
+        gc.fillRectangle (b.left () + 2, y + 4, 2, 34, cfg.getColorEdit ());
+        final double size = gc.calculateFontSize (text, 15, width, 11);
+        int split = text.length ();
+        if (size < 0)
+            while (split > 0 && gc.calculateFontSize (text.substring (0, split), 12, width, 11) < 0)
+                split = text.offsetByCodePoints (split, -1);
+        final boolean wrap = split < text.length ();
+        gc.drawTextInBounds (text.substring (0, split), b.left () + 8, y, width, wrap ? 21 : 42, de.mossgrabers.framework.graphics.Align.LEFT, ink, Math.max (11, size));
+        if (wrap)
+            gc.drawTextInBounds (text.substring (split).stripLeading (), b.left () + 8, y + 21, width, 21, de.mossgrabers.framework.graphics.Align.LEFT, ink, 11);
+    }
 
     /** {@inheritDoc} */
     @Override

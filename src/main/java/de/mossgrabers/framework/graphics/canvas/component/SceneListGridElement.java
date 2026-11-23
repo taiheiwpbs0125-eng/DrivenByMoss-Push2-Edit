@@ -86,7 +86,7 @@ public class SceneListGridElement extends ChannelSelectComponent
 
         final ColorEx textColor = configuration.getColorText ();
         final ColorEx borderColor = configuration.getColorBackgroundLighter ();
-        final double fontHeight = itemHeight > 30 ? itemHeight / 2 : itemHeight * 2 / 3;
+        final double fontHeight = configuration.usesCompactOrangeDisplay () ? Math.min (13, itemHeight * 0.6) : itemHeight > 30 ? itemHeight / 2 : itemHeight * 2 / 3;
 
         for (int i = 0; i < size; i++)
         {
@@ -94,9 +94,14 @@ public class SceneListGridElement extends ChannelSelectComponent
 
             final ColorEx backgroundColor = this.colors[i];
             gc.fillRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, backgroundColor);
+            if (configuration.usesCompactOrangeDisplay ())
+            {
+                gc.fillRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, configuration.getColorBackground ());
+                gc.fillRectangle (itemLeft, itemTop + separatorSize, 3, itemHeight - 2 * separatorSize, backgroundColor);
+            }
             if (this.exists[i])
-                gc.drawTextInBounds (this.names[i], itemLeft + inset, itemTop - 1, itemWidth - 2 * inset, itemHeight, Align.LEFT, ColorEx.calcContrastColor (backgroundColor), fontHeight);
-            gc.strokeRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, this.isSelecteds[i] ? textColor : borderColor, this.isSelecteds[i] ? 2 : 1);
+                gc.drawTextInBounds (this.names[i], itemLeft + inset, itemTop - 1, itemWidth - 2 * inset, itemHeight, Align.LEFT, configuration.usesCompactOrangeDisplay () ? textColor : ColorEx.calcContrastColor (backgroundColor), fontHeight);
+            gc.strokeRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, this.isSelecteds[i] ? (configuration.usesCompactOrangeDisplay () ? configuration.getColorEdit () : textColor) : borderColor, this.isSelecteds[i] ? 2 : 1);
         }
     }
 

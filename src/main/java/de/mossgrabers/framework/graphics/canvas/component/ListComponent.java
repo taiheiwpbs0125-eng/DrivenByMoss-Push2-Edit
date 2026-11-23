@@ -66,8 +66,8 @@ public class ListComponent implements IComponent
             final Pair<String, Boolean> item = this.items.get (i);
             final boolean isSelected = item.getValue ().booleanValue ();
             final double itemTop = i * itemHeight;
-            gc.fillRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, isSelected ? textColor : borderColor);
-            gc.drawTextInBounds (item.getKey (), itemLeft + inset, itemTop, itemWidth - 2 * inset, itemHeight, Align.LEFT, isSelected ? borderColor : textColor, itemHeight * 0.6);
+            gc.fillRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, isSelected ? (configuration.usesCompactOrangeDisplay () ? configuration.getColorEdit () : textColor) : configuration.usesCompactOrangeDisplay () ? configuration.getColorBackground () : borderColor);
+            gc.drawTextInBounds (item.getKey (), itemLeft + inset, itemTop, itemWidth - 2 * inset, itemHeight, Align.LEFT, isSelected ? borderColor : textColor, configuration.usesCompactOrangeDisplay () ? Math.min (13, itemHeight * 0.6) : itemHeight * 0.6);
         }
     }
 

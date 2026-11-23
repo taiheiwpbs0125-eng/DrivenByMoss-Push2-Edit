@@ -69,6 +69,19 @@ public class LabelComponent implements IComponent
     @Override
     public void draw (final IGraphicsInfo info)
     {
+        if (info.getConfiguration ().usesCompactOrangeDisplay () && this.layout != LabelLayout.COLORED)
+        {
+            final var b = info.getBounds ();
+            final double y = b.top () == 0 ? 0 : b.top () + Math.max (0, b.height () - 17);
+            final var cfg = info.getConfiguration ();
+            final ColorEx bg = this.isSelected ? cfg.getColorEdit () : cfg.getColorBackground ();
+            final var gc = info.getContext ();
+            gc.fillRectangle (b.left (), y, b.width (), 17, bg);
+            if (this.backgroundColor != null)
+                gc.fillRectangle (b.left (), y + 15, b.width (), 2, this.backgroundColor);
+            gc.drawTextInBounds (this.text, b.left () + 3, y, b.width () - 6, 17, Align.CENTER, ColorEx.calcContrastColor (bg), 11);
+            return;
+        }
         if (this.layout == LabelLayout.COLORED)
         {
             this.drawColoredLayout (info);

@@ -14,6 +14,8 @@ import de.mossgrabers.framework.controller.color.ColorEx;
  */
 public interface IGraphicsConfiguration
 {
+    default boolean usesCompactOrangeDisplay () { return false; }
+
     /**
      * Get the text color of an element.
      *

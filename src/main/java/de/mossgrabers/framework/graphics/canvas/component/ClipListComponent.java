@@ -70,7 +70,7 @@ public class ClipListComponent extends ChannelSelectComponent
         final double itemLeft = left;
         final double itemWidth = width;
         final double itemHeight = height / (size + 1);
-        final double fontHeight = itemHeight > 30 ? itemHeight / 2 : itemHeight * 2 / 3;
+        final double fontHeight = configuration.usesCompactOrangeDisplay () ? Math.min (13, itemHeight * 0.6) : itemHeight > 30 ? itemHeight / 2 : itemHeight * 2 / 3;
         final double boxLeft = itemLeft + inset;
         final double boxWidth = fontHeight - 2 * separatorSize;
         final double radius = boxWidth / 2;
@@ -104,6 +104,11 @@ public class ClipListComponent extends ChannelSelectComponent
             else
                 gc.fillRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, clipBackgroundColor);
 
+            if (configuration.usesCompactOrangeDisplay ())
+            {
+                gc.fillRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, configuration.getColorBackground ());
+                gc.fillRectangle (itemLeft, itemTop + separatorSize, 3, itemHeight - 2 * separatorSize, clipBackgroundColor);
+            }
             if (slot.doesExist ())
             {
                 // Draw the play/record state indicator box
@@ -140,12 +145,12 @@ public class ClipListComponent extends ChannelSelectComponent
 
                 // Draw the text
                 final double padLeft = 2 * inset + fontHeight;
-                gc.drawTextInBounds (name, itemLeft + padLeft, itemTop - 1, itemWidth - padLeft - separatorSize - inset, itemHeight, Align.LEFT, slot.isSelected () ? ColorEx.calcContrastColor (textColor) : textColor, fontHeight);
+                gc.drawTextInBounds (name, itemLeft + padLeft, itemTop - 1, itemWidth - padLeft - separatorSize - inset, itemHeight, Align.LEFT, configuration.usesCompactOrangeDisplay () ? textColor : slot.isSelected () ? ColorEx.calcContrastColor (textColor) : textColor, fontHeight);
             }
 
             // Draw the border if selected
             if (slot.isSelected ())
-                gc.strokeRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, ColorEx.calcContrastColor (textColor), slot.isSelected () ? 2 : 1);
+                gc.strokeRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, configuration.usesCompactOrangeDisplay () ? configuration.getColorEdit () : ColorEx.calcContrastColor (textColor), slot.isSelected () ? 2 : 1);
         }
     }
 

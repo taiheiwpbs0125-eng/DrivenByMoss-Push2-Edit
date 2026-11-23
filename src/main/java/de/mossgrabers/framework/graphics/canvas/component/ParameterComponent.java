@@ -165,7 +165,7 @@ public class ParameterComponent extends MenuComponent
 
         // Draw the name and value texts
         final ColorEx textColor = configuration.getColorText ();
-        final double fontSize = elementHeight * 2 / 3;
+        final double fontSize = configuration.usesCompactOrangeDisplay () ? Math.min (14, elementHeight * 2 / 3) : elementHeight * 2 / 3;
         gc.drawTextInBounds (this.paramName, left + inset - 1, controlsTop - inset, elementWidth, elementHeight, Align.CENTER, textColor, fontSize);
         gc.drawTextInBounds (this.paramValueText, left + inset - 1, controlsTop - inset + elementHeight, elementWidth, elementHeight, Align.CENTER, textColor, fontSize);
 

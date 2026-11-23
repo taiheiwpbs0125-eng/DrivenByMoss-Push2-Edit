@@ -1267,6 +1267,9 @@ public class PushConfiguration extends AbstractConfiguration implements IGraphic
 
     /** {@inheritDoc} */
     @Override
+    public boolean usesCompactOrangeDisplay () { return this.pushVersion == PushVersion.VERSION_2; }
+
+    @Override
     public ColorEx getColorBackground ()
     {
         if (this.pushVersion == PushVersion.VERSION_2 && DEFAULT_COLOR_BACKGROUND.equals (this.colorBackground))

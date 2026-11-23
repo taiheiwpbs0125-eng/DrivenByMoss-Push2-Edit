@@ -9,3 +9,6 @@ fileHashes.lock
 /.idea
 *.iml
 /bin/
+
+build.log
+*.bwextension
