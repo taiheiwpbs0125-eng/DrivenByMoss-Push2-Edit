@@ -398,6 +398,13 @@ public class PushConfiguration extends AbstractConfiguration implements IGraphic
     private int                   padSensitivityPush2          = 5;
     private int                   padGainPush2                 = 5;
     private int                   padDynamicsPush2             = 5;
+    private static final ColorEx ORANGE_THEME_BACKGROUND = ColorEx.fromRGB (46, 42, 40);
+    private static final ColorEx ORANGE_THEME_BACKGROUND_DARKER = ColorEx.fromRGB (32, 30, 29);
+    private static final ColorEx ORANGE_THEME_BACKGROUND_LIGHTER = ColorEx.fromRGB (101, 65, 44);
+    private static final ColorEx ORANGE_THEME_BORDER = ColorEx.fromRGB (41, 37, 35);
+    private static final ColorEx ORANGE_THEME_TEXT = ColorEx.fromRGB (247, 238, 230);
+    private static final ColorEx ORANGE_THEME_EDIT = ColorEx.fromRGB (255, 132, 46);
+    private static final ColorEx ORANGE_THEME_FADER = ColorEx.fromRGB (189, 92, 35);
     private ColorEx               colorBackground              = DEFAULT_COLOR_BACKGROUND;
     private ColorEx               colorBorder                  = DEFAULT_COLOR_BORDER;
     private ColorEx               colorText                    = DEFAULT_COLOR_TEXT;
@@ -1262,6 +1269,8 @@ public class PushConfiguration extends AbstractConfiguration implements IGraphic
     @Override
     public ColorEx getColorBackground ()
     {
+        if (this.pushVersion == PushVersion.VERSION_2 && DEFAULT_COLOR_BACKGROUND.equals (this.colorBackground))
+            return ORANGE_THEME_BACKGROUND;
         return this.colorBackground;
     }
 
@@ -1270,6 +1279,8 @@ public class PushConfiguration extends AbstractConfiguration implements IGraphic
     @Override
     public ColorEx getColorBackgroundDarker ()
     {
+        if (this.pushVersion == PushVersion.VERSION_2 && DEFAULT_COLOR_BACKGROUND_DARKER.equals (this.colorBackgroundDarker))
+            return ORANGE_THEME_BACKGROUND_DARKER;
         return this.colorBackgroundDarker;
     }
 
@@ -1278,6 +1289,8 @@ public class PushConfiguration extends AbstractConfiguration implements IGraphic
     @Override
     public ColorEx getColorBackgroundLighter ()
     {
+        if (this.pushVersion == PushVersion.VERSION_2 && DEFAULT_COLOR_BACKGROUND_LIGHTER.equals (this.colorBackgroundLighter))
+            return ORANGE_THEME_BACKGROUND_LIGHTER;
         return this.colorBackgroundLighter;
     }
 
@@ -1286,6 +1299,8 @@ public class PushConfiguration extends AbstractConfiguration implements IGraphic
     @Override
     public ColorEx getColorBorder ()
     {
+        if (this.pushVersion == PushVersion.VERSION_2 && DEFAULT_COLOR_BORDER.equals (this.colorBorder))
+            return ORANGE_THEME_BORDER;
         return this.colorBorder;
     }
 
@@ -1294,6 +1309,8 @@ public class PushConfiguration extends AbstractConfiguration implements IGraphic
     @Override
     public ColorEx getColorText ()
     {
+        if (this.pushVersion == PushVersion.VERSION_2 && DEFAULT_COLOR_TEXT.equals (this.colorText))
+            return ORANGE_THEME_TEXT;
         return this.colorText;
     }
 
@@ -1302,6 +1319,8 @@ public class PushConfiguration extends AbstractConfiguration implements IGraphic
     @Override
     public ColorEx getColorEdit ()
     {
+        if (this.pushVersion == PushVersion.VERSION_2 && DEFAULT_COLOR_EDIT.equals (this.colorEdit))
+            return ORANGE_THEME_EDIT;
         return this.colorEdit;
     }
 
@@ -1310,6 +1329,8 @@ public class PushConfiguration extends AbstractConfiguration implements IGraphic
     @Override
     public ColorEx getColorFader ()
     {
+        if (this.pushVersion == PushVersion.VERSION_2 && DEFAULT_COLOR_FADER.equals (this.colorFader))
+            return ORANGE_THEME_FADER;
         return this.colorFader;
     }
 

@@ -1,4 +1,4 @@
-// Written by Jürgen Moßgraber - mossgrabers.de
+// Written by Jﾃｼrgen Moﾃ殀raber - mossgrabers.de
 // (c) 2017-2025
 // Licensed under LGPLv3 - http://www.gnu.org/licenses/lgpl-3.0.txt
 
@@ -19,11 +19,12 @@ import com.bitwig.extension.api.graphics.Image;
 /**
  * Implementation for the graphics context.
  *
- * @author Jürgen Moßgraber
+ * @author Jﾃｼrgen Moﾃ殀raber
  */
 public class GraphicsContextImpl implements IGraphicsContext
 {
     private final GraphicsOutput gc;
+    private final JapaneseLabels japanese;
 
 
     /**
@@ -34,6 +35,12 @@ public class GraphicsContextImpl implements IGraphicsContext
      */
     public GraphicsContextImpl (final AntialiasMode antialiasMode, final GraphicsOutput gc)
     {
+        this (antialiasMode, gc, null);
+    }
+
+    GraphicsContextImpl (final AntialiasMode antialiasMode, final GraphicsOutput gc, final JapaneseLabels japanese)
+    {
+        this.japanese = japanese;
         gc.setAntialias (antialiasMode);
         this.gc = gc;
     }
@@ -170,6 +177,23 @@ public class GraphicsContextImpl implements IGraphicsContext
         final String txt = StringUtils.fixFontCharacters (text);
 
         this.gc.save ();
+        if (this.japanese != null && this.japanese.matches (txt))
+        {
+            try
+            {
+                final JapaneseLabels.Label label = this.japanese.get (txt, fontSize);
+                final double baseline = y + (height + label.ascent () - label.descent ()) / 2;
+                final double left = alignment == Align.CENTER ? x + (width - label.width ()) / 2 : alignment == Align.RIGHT ? x + width - label.width () : x;
+                this.gc.rectangle (x, y, width, height);
+                this.gc.clip ();
+                if (backgroundColor != null)
+                    this.fillRoundedRectangle (left - 12, baseline - label.ascent () - 12, label.width () + 24, label.ascent () + label.descent () + 24, 12, backgroundColor);
+                this.setColor (color);
+                label.paint (this.gc, left, baseline);
+            }
+            finally { this.gc.restore (); }
+            return;
+        }
         this.gc.setFontSize (fontSize);
 
         // We need to calculate the text height from a character which has no ascent, since showText
@@ -214,6 +238,21 @@ public class GraphicsContextImpl implements IGraphicsContext
         final String txt = StringUtils.fixFontCharacters (text);
 
         this.gc.save ();
+        if (this.japanese != null && this.japanese.matches (txt))
+        {
+            try
+            {
+                final JapaneseLabels.Label label = this.japanese.get (txt, fontSize);
+                final double baseline = y + (height + label.ascent () - label.descent ()) / 2;
+                final double left = x;
+                if (backgroundColor != null)
+                    this.fillRoundedRectangle (left - 12, baseline - label.ascent () - 12, label.width () + 24, label.ascent () + label.descent () + 24, 12, backgroundColor);
+                this.setColor (color);
+                label.paint (this.gc, left, baseline);
+            }
+            finally { this.gc.restore (); }
+            return;
+        }
         this.gc.setFontSize (fontSize);
 
         // We need to calculate the text height from a character which has no ascent, since showText
@@ -271,7 +310,7 @@ public class GraphicsContextImpl implements IGraphicsContext
         while (size < maxHeight)
         {
             this.gc.setFontSize (size);
-            final double width = this.gc.getTextExtents (text).getWidth ();
+            final double width = this.japanese != null && this.japanese.matches (text) ? this.japanese.get (text, size).width () : this.gc.getTextExtents (text).getWidth ();
             if (width > maxWidth)
                 break;
             fittingSize = size;

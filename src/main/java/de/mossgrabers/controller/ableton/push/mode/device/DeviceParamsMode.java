@@ -52,6 +52,7 @@ public class DeviceParamsMode extends BaseMode<IParameter>
     };
 
     protected final String []      hostMenu = new String [MENU.length];
+    private final DeviceTileSurface [] tiles = new DeviceTileSurface [8];
     protected boolean              showDevices;
 
 
@@ -65,6 +66,12 @@ public class DeviceParamsMode extends BaseMode<IParameter>
     {
         super ("Parameters", surface, model, model.getCursorDevice ().getParameterBank ());
 
+        if (surface.getConfiguration ().getPushVersion () == de.mossgrabers.controller.ableton.push.PushVersion.VERSION_2)
+        {
+            // Each 120-pixel column has a two-pixel separator.
+            for (int i = 0; i < this.tiles.length; i++)
+                this.tiles[i] = new DeviceTileSurface (model.getHost (), 118);
+        }
         this.setParameterProvider (new BankParameterProvider (this.model.getCursorDevice ().getParameterBank ()));
 
         this.setShowDevices (true);
@@ -468,6 +475,15 @@ public class DeviceParamsMode extends BaseMode<IParameter>
             final boolean parameterIsActive = this.isKnobTouched (i);
             final int parameterModulatedValue = valueChanger.toDisplayValue (exists ? param.getModulatedValue () : -1);
 
+            if (this.surface.getConfiguration ().getPushVersion () == de.mossgrabers.controller.ableton.push.PushVersion.VERSION_2)
+            {
+                final int [] rgb = bottomMenuColor.toIntRGB255 ();
+                final int accent = rgb[0] << 16 | rgb[1] << 8 | rgb[2];
+                final String context = i == 0 ? cd.getName () : i == 1 && selectedPage >= 0 ? parameterPageBank.getItem (selectedPage) : "";
+                final DeviceTile tile = new DeviceTile (this.hostMenu[i], isTopMenuOn, context, exists ? param.getName () : "", exists ? param.getDisplayedValue () : "", parameterValue, parameterModulatedValue, valueChanger.getUpperBound (), parameterIsActive, bottomMenu, isBottomMenuOn, accent);
+                display.addElement (new DeviceTileSurface.Column (this.tiles[i], tile));
+                continue;
+            }
             display.addParameterElement (this.hostMenu[i], isTopMenuOn, bottomMenu, bottomMenuIcon, color, isBottomMenuOn, parameterName, parameterValue, parameterValueStr, parameterIsActive, parameterModulatedValue);
         }
     }

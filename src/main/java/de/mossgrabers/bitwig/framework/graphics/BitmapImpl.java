@@ -21,8 +21,17 @@ import java.nio.ByteBuffer;
  *
  * @author Jürgen Moßgraber
  */
-public record BitmapImpl (Bitmap bitmap) implements IBitmap
+public final class BitmapImpl implements IBitmap
 {
+    private final Bitmap bitmap;
+    private JapaneseLabels japaneseLabels;
+
+    public BitmapImpl (final Bitmap bitmap) { this.bitmap = bitmap; }
+
+    public Bitmap bitmap () { return this.bitmap; }
+
+    public void enableJapaneseLabels () { this.japaneseLabels = new JapaneseLabels (); }
+
     /** {@inheritDoc} */
     @Override
     public void setDisplayWindowTitle (final String title)
@@ -43,7 +52,7 @@ public record BitmapImpl (Bitmap bitmap) implements IBitmap
     @Override
     public void render (final boolean enableAntialias, final IRenderer renderer)
     {
-        this.bitmap.render (gc -> renderer.render (new GraphicsContextImpl (enableAntialias ? AntialiasMode.BEST : AntialiasMode.OFF, gc)));
+        this.bitmap.render (gc -> renderer.render (new GraphicsContextImpl (enableAntialias ? AntialiasMode.BEST : AntialiasMode.OFF, gc, this.japaneseLabels)));
     }
 
 

@@ -283,6 +283,13 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
         final IBrowser browser = this.model.getBrowser ();
         if (!browser.isActive ())
             return;
+        if (this.surface.getConfiguration ().getPushVersion () == de.mossgrabers.controller.ableton.push.PushVersion.VERSION_2)
+        {
+            final int focus = this.selectionMode == SELECTION_OFF ? -1 : this.selectionMode == SELECTION_PRESET ? 7 : this.filterColumn;
+            display.addElement (OrangeBrowser.read (browser, focus, this.model.getHost ().supports (Capability.HAS_BROWSER_PREVIEW)));
+            return;
+        }
+
 
         switch (this.selectionMode)
         {

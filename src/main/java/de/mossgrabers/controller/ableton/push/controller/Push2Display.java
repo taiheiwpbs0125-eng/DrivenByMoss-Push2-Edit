@@ -38,6 +38,9 @@ public class Push2Display extends AbstractGraphicDisplay
     {
         super (host, configuration, new DefaultGraphicsDimensions (960, 160, maxParameterValue), "Push 2 Display");
 
+        if (configuration.getPushVersion () == de.mossgrabers.controller.ableton.push.PushVersion.VERSION_2 &&
+            this.getImage () instanceof de.mossgrabers.bitwig.framework.graphics.BitmapImpl bitmap)
+            bitmap.enableJapaneseLabels ();
         this.usbDisplay = new PushUsbDisplay (host);
     }
 
