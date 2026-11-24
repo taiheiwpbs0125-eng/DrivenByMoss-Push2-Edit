@@ -53,6 +53,10 @@ public interface IBrowserColumn extends IItem
 
     default IBrowserColumnItem [] getColumnEntries () { return getItems (); }
 
+    default void scrollEntriesToStart () {}
+    default boolean nextEntriesPage () { return false; }
+    default int entriesPosition () { return 0; }
+
     default int getEntryCount () { return -1; }
 
 

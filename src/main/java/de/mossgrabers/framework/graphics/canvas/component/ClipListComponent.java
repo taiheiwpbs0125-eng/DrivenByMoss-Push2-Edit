@@ -106,7 +106,7 @@ public class ClipListComponent extends ChannelSelectComponent
 
             if (configuration.usesCompactOrangeDisplay ())
             {
-                gc.fillRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, configuration.getColorBackground ());
+                gc.fillRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, OrangePanel.BASE);
                 gc.fillRectangle (itemLeft, itemTop + separatorSize, 3, itemHeight - 2 * separatorSize, clipBackgroundColor);
             }
             if (slot.doesExist ())
@@ -145,12 +145,12 @@ public class ClipListComponent extends ChannelSelectComponent
 
                 // Draw the text
                 final double padLeft = 2 * inset + fontHeight;
-                gc.drawTextInBounds (name, itemLeft + padLeft, itemTop - 1, itemWidth - padLeft - separatorSize - inset, itemHeight, Align.LEFT, configuration.usesCompactOrangeDisplay () ? textColor : slot.isSelected () ? ColorEx.calcContrastColor (textColor) : textColor, fontHeight);
+                gc.drawTextInBounds (name, itemLeft + padLeft, itemTop - 1, itemWidth - padLeft - separatorSize - inset, itemHeight, Align.LEFT, configuration.usesCompactOrangeDisplay () ? ColorEx.WHITE : slot.isSelected () ? ColorEx.calcContrastColor (textColor) : textColor, fontHeight);
             }
 
             // Draw the border if selected
             if (slot.isSelected ())
-                gc.strokeRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, configuration.usesCompactOrangeDisplay () ? configuration.getColorEdit () : ColorEx.calcContrastColor (textColor), slot.isSelected () ? 2 : 1);
+                gc.strokeRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, configuration.usesCompactOrangeDisplay () ? OrangePanel.ACCENT : ColorEx.calcContrastColor (textColor), slot.isSelected () ? 2 : 1);
         }
     }
 

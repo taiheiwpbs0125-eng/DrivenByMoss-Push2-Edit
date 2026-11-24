@@ -13,9 +13,22 @@ final class LocationOrder {
     private static int priority(String name, String wildcard) {
         if (name.equals(wildcard)) return 0;
         String key = name.toLowerCase(Locale.ROOT).replace("-", "").replace(" ", "");
-        if (key.equals("plugins") || key.equals("プラグイン")) return 1;
+        if (key.equals("plugins") || key.equals("プラグイン") || key.equals("プラグイン(plugins)")) return 1;
         if (key.startsWith("vst") || key.equals("clap")) return 2;
         return 3;
+    }
+
+    static IBrowserColumnItem pluginLocation(IBrowserColumn column) {
+        for (var item : column.getItems()) {
+            if (item.doesExist() && priority(item.getName(), column.getWildcard()) == 1)
+                return item;
+        }
+        // The siblings bank follows the cursor, while the location column bank starts at its root.
+        for (var item : column.getColumnEntries()) {
+            if (item.doesExist() && priority(item.getName(), column.getWildcard()) == 1)
+                return item;
+        }
+        return null;
     }
 
     static IBrowserColumnItem[] visible(IBrowserColumn column) {

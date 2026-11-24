@@ -276,6 +276,7 @@ public class PushControllerSetup extends AbstractControllerSetup<PushControlSurf
     {
         final ModelSetup ms = new ModelSetup ();
         ms.enableDrum64Device ();
+        ms.setFollowsLauncherClipSelection (this.pushVersion == PushVersion.VERSION_2);
         if (this.pushVersion != PushVersion.VERSION_1)
         {
             ms.setNumFilterColumnEntries (48);

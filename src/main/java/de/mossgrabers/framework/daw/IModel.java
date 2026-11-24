@@ -347,6 +347,20 @@ public interface IModel
     INoteClip getCursorClip ();
 
 
+    /** Get the clip targeted by the clip editor. */
+    default INoteClip getClipForEditing ()
+    {
+        return this.getCursorClip ();
+    }
+
+
+    /** Toggle whether the current clip follows selection. */
+    default void toggleCursorClipPin ()
+    {
+        this.getCursorClip ().togglePinned ();
+    }
+
+
     /**
      * If there was no clip for a sequencer created, ensure that there is at least one cursor clip
      * e.g. for quantization and clip modifications.

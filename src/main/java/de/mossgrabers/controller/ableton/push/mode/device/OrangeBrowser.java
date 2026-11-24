@@ -22,10 +22,10 @@ record OrangeBrowser(List<String> headings, List<String> filters, List<String> i
     private static final FontRenderContext METRICS = new FontRenderContext(null,true,true);
     private static final Font FONT = new Font("Meiryo",Font.PLAIN,12);
 
-    static OrangeBrowser read(IBrowser browser, int focus, boolean previewSupported) {
+    static OrangeBrowser read(IBrowser browser, int focus, boolean pluginSource, int nativeKind, boolean previewSupported, List<String> recent, String recentSelection) {
         var headings = new ArrayList<String>();
         var filters = new ArrayList<String>();
-        for (int i=0; i<7; i++) {
+        for (int i=0; i<6; i++) {
             boolean available = i < browser.getFilterColumnCount() && browser.getFilterColumn(i).doesExist();
             headings.add(available ? (i+1)+" "+LABELS.get(i)+"で絞る" : "");
             String value = "";
@@ -36,20 +36,55 @@ record OrangeBrowser(List<String> headings, List<String> filters, List<String> i
             }
             filters.add(value);
         }
-        headings.add("8 検索結果を選ぶ");
+        headings.add("7 検索結果を選ぶ");
         filters.add(previewSupported ? (browser.isPreviewEnabled() ? "試聴 ON" : "試聴 OFF") : "");
+        headings.add("8 最近使った項目");
+        filters.add(recent.size()+" 件");
+        if (focus == 7)
+            return new OrangeBrowser(List.copyOf(headings),List.copyOf(filters),List.copyOf(recent),focus,
+                recent.indexOf(recentSelection), recentSelection == null ? "履歴なし" : recentSelection,"");
         String title = browser.getSelectedResult();
         var items = new ArrayList<String>();
         int selected = -1;
+        if (nativeKind >= 0) {
+            var kinds = List.of("すべて","インストゥルメント","オーディオエフェクト","ノートエフェクト");
+            headings.set(1,"2 種類を選ぶ");
+            filters.set(1,"デバイス");
+            headings.set(5,"6 機器種別で絞る");
+            filters.set(5,kinds.get(nativeKind));
+            if (focus == 5)
+                return new OrangeBrowser(List.copyOf(headings),List.copyOf(filters),kinds,focus,nativeKind,kinds.get(nativeKind),"");
+        }
+        if (pluginSource) {
+            headings.set(4,"5 供給元で絞る");
+            var results = new ArrayList<String>();
+            for (var result : browser.getResultColumnItems())
+                if (result.doesExist()) results.add(result.getName());
+            String vendor = PluginVendor.title(results);
+            filters.set(4, PluginVendor.ALL_VENDORS.equals(vendor) ? "すべて" : vendor);
+            if (focus == 4) {
+                return new OrangeBrowser(List.copyOf(headings),List.copyOf(filters),List.copyOf(results),focus,-1,
+                    vendor,"");
+            }
+        }
+        {
+            int row = nativeKind >= 0 ? 1 : pluginSource ? 2 : 0;
+            var choices = List.of("任意の種類","デバイス","プラグイン");
+            String label = choices.get(row);
+            headings.set(1,"2 種類を選ぶ");
+            filters.set(1, row == 0 ? "すべて" : label);
+            if (focus == 1)
+                return new OrangeBrowser(List.copyOf(headings),List.copyOf(filters),choices,focus,row,label,"");
+        }
         if (focus >= 0) {
-            IBrowserColumnItem[] entries = focus==7 ? browser.getResultColumnItems() : browser.getFilterColumn(focus).getItems();
+            IBrowserColumnItem[] entries = focus==6 ? browser.getResultColumnItems() : browser.getFilterColumn(focus).getItems();
             if (focus == 1) entries = FileKinds.visible (browser.getFilterColumn (1));
             if (focus == 0) entries = LocationOrder.visible (browser.getFilterColumn (0));
             for (int i=0; i<Math.min(48,entries.length); i++) {
                 var item=entries[i];
                 String name=item.doesExist() ? item.getName() : "";
                 if (item.isSelected() && !name.isBlank()) { selected=i; title=name; }
-                items.add(focus<7 && !name.isBlank() ? name+" ("+item.getHitCount()+")" : name);
+                items.add(focus<6 && !name.isBlank() ? name+" ("+item.getHitCount()+")" : name);
             }
         }
         if (focus == 0 && !headings.get(0).isBlank()) headings.set(0,"Shift↑子 ↓親");
@@ -61,6 +96,22 @@ record OrangeBrowser(List<String> headings, List<String> filters, List<String> i
         String context=String.join("  ",java.util.Objects.toString(browser.getInfoText(),""),java.util.Objects.toString(browser.getSelectedContentType(),"")).strip();
         return new OrangeBrowser(List.copyOf(headings),List.copyOf(filters),List.copyOf(items),focus,selected,
             title==null || title.isBlank() ? "未選択" : title,context);
+    }
+
+    OrangeBrowser scrollTitle(long elapsedMillis) {
+        if (focus >= 0 && focus < 6 || FONT.deriveFont(16f).getStringBounds(title,METRICS).getWidth() <= 952)
+            return this;
+        int end = title.length();
+        while (end > 0) {
+            int prev = title.offsetByCodePoints(end,-1);
+            if (FONT.deriveFont(16f).getStringBounds(title.substring(prev),METRICS).getWidth() > 952) break;
+            end = prev;
+        }
+        int steps = title.codePointCount(0,end);
+        long phase = elapsedMillis % (1800L + 160L * steps);
+        int offset = Math.clamp((phase - 900) / 160, 0, steps);
+        if (offset == 0) return this;
+        return new OrangeBrowser(headings,filters,items,focus,selected,title.substring(title.offsetByCodePoints(0,offset)),context);
     }
 
     public void draw(IGraphicsInfo info) {

@@ -4,6 +4,7 @@
 
 package de.mossgrabers.controller.ableton.push.mode.track;
 
+import de.mossgrabers.framework.graphics.canvas.component.Push2ModeNotice;
 import de.mossgrabers.controller.ableton.push.command.continuous.IPush3Encoder;
 import de.mossgrabers.controller.ableton.push.controller.PushColorManager;
 import de.mossgrabers.controller.ableton.push.controller.PushControlSurface;
@@ -143,8 +144,14 @@ public class ClipMode extends AbstractTrackMode implements IPush3Encoder
     public void updateDisplay2 (final IGraphicDisplay display)
     {
         final IClip clip = this.getMidiClip ();
-        if (!clip.doesExist ())
+        final boolean isPush2 = this.surface.getConfiguration ().usesCompactOrangeDisplay ();
+        if (!clip.doesExist () || isPush2 && this.displayMidiNotes && !((INoteClip) clip).supportsNoteData ())
         {
+            if (isPush2)
+            {
+                display.addElement (this.displayMidiNotes ? Push2ModeNotice.NOTE_CLIP : Push2ModeNotice.CLIP);
+                return;
+            }
             display.addEmptyElement ();
             display.notify (PLEASE_SELECT_A_CLIP_PUSH2);
             return;
@@ -196,7 +203,9 @@ public class ClipMode extends AbstractTrackMode implements IPush3Encoder
         if (index == 0)
         {
             final IClip clip = this.getMidiClip ();
-            if (clip instanceof final INoteClip noteClip)
+            if (this.surface.getConfiguration ().usesCompactOrangeDisplay ())
+                this.model.toggleCursorClipPin ();
+            else if (clip instanceof final INoteClip noteClip)
                 noteClip.togglePinned ();
             return;
         }
@@ -269,6 +278,17 @@ public class ClipMode extends AbstractTrackMode implements IPush3Encoder
     @Override
     public void encoderLeft (final ButtonEvent event)
     {
+        if (this.surface.getConfiguration ().usesCompactOrangeDisplay () && this.displayMidiNotes)
+        {
+            final INoteClip clip = this.model.getClipForEditing ();
+            if (event == ButtonEvent.DOWN && clip.doesExist () && clip.supportsNoteData () && clip.canScrollStepsBackwards ())
+            {
+                clip.scrollStepsPageBackwards ();
+                this.activeNotePosition = null;
+            }
+            return;
+        }
+
         final ViewManager viewManager = this.surface.getViewManager ();
         if (viewManager.getActive () instanceof final AbstractSequencerView<?, ?> sequencerView)
         {
@@ -282,6 +302,17 @@ public class ClipMode extends AbstractTrackMode implements IPush3Encoder
     @Override
     public void encoderRight (final ButtonEvent event)
     {
+        if (this.surface.getConfiguration ().usesCompactOrangeDisplay () && this.displayMidiNotes)
+        {
+            final INoteClip clip = this.model.getClipForEditing ();
+            if (event == ButtonEvent.DOWN && clip.doesExist () && clip.supportsNoteData () && clip.canScrollStepsForwards ())
+            {
+                clip.scrollStepsPageForward ();
+                this.activeNotePosition = null;
+            }
+            return;
+        }
+
         final ViewManager viewManager = this.surface.getViewManager ();
         if (viewManager.getActive () instanceof final AbstractSequencerView<?, ?> sequencerView)
         {
@@ -313,6 +344,9 @@ public class ClipMode extends AbstractTrackMode implements IPush3Encoder
 
     private IClip getMidiClip ()
     {
+        if (this.surface.getConfiguration ().usesCompactOrangeDisplay ())
+            return this.model.getClipForEditing ();
+
         if (this.displayMidiNotes)
         {
             final IView activeView = this.surface.getViewManager ().getActive ();

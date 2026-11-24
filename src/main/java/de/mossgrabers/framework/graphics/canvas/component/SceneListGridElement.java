@@ -96,12 +96,12 @@ public class SceneListGridElement extends ChannelSelectComponent
             gc.fillRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, backgroundColor);
             if (configuration.usesCompactOrangeDisplay ())
             {
-                gc.fillRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, configuration.getColorBackground ());
+                gc.fillRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, OrangePanel.BASE);
                 gc.fillRectangle (itemLeft, itemTop + separatorSize, 3, itemHeight - 2 * separatorSize, backgroundColor);
             }
             if (this.exists[i])
-                gc.drawTextInBounds (this.names[i], itemLeft + inset, itemTop - 1, itemWidth - 2 * inset, itemHeight, Align.LEFT, configuration.usesCompactOrangeDisplay () ? textColor : ColorEx.calcContrastColor (backgroundColor), fontHeight);
-            gc.strokeRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, this.isSelecteds[i] ? (configuration.usesCompactOrangeDisplay () ? configuration.getColorEdit () : textColor) : borderColor, this.isSelecteds[i] ? 2 : 1);
+                gc.drawTextInBounds (this.names[i], itemLeft + inset, itemTop - 1, itemWidth - 2 * inset, itemHeight, Align.LEFT, configuration.usesCompactOrangeDisplay () ? ColorEx.WHITE : ColorEx.calcContrastColor (backgroundColor), fontHeight);
+            gc.strokeRectangle (itemLeft, itemTop + separatorSize, itemWidth, itemHeight - 2 * separatorSize, this.isSelecteds[i] ? (configuration.usesCompactOrangeDisplay () ? OrangePanel.ACCENT : textColor) : borderColor, this.isSelecteds[i] ? 2 : 1);
         }
     }
 

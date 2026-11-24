@@ -86,8 +86,12 @@ public class SendsComponent extends ChannelSelectComponent
         final double sliderHeight = sendRowHeight - 2 * separatorSize;
 
         // Background of slider area
-        final ColorEx backgroundColor = this.modifyIfOff (true, configuration.getMixerPanelColor (this.footer.isSelected () || this.isExMode));
-        gc.fillRectangle (this.isExMode ? left - separatorSize : left, t, this.isExMode ? width + separatorSize : width, this.isExMode ? h - 2 : h, backgroundColor);
+        final ColorEx backgroundColor = this.modifyIfOff (true, configuration.getColorBackground ());
+        final boolean selectedPanel = this.footer.isSelected () || this.isExMode;
+        final ColorEx panelColor = configuration.usesCompactOrangeDisplay ()
+            ? this.modifyIfOff (true, java.util.Arrays.stream (this.sendData).anyMatch (s -> !s.text ().isEmpty ()) ? OrangePanel.TOUCHED : OrangePanel.BASE)
+            : selectedPanel ? this.modifyIfOff (true, configuration.getColorBackgroundLighter ()) : backgroundColor;
+        gc.fillRectangle (this.isExMode ? left - separatorSize : left, t, this.isExMode ? width + separatorSize : width, this.isExMode ? h - 2 : h, panelColor);
 
         double topy = menuHeight + (this.isExMode ? 0 : separatorSize);
 
@@ -98,10 +102,10 @@ public class SendsComponent extends ChannelSelectComponent
             if (sendName.length () == 0)
                 break;
 
-            final ColorEx textColor = this.modifyIfOff (send.enabled (), configuration.getColorText ());
+            final ColorEx textColor = this.modifyIfOff (send.enabled (), configuration.usesCompactOrangeDisplay () ? ColorEx.WHITE : configuration.getColorText ());
             final ColorEx borderColor = this.modifyIfOff (send.enabled (), configuration.getColorBorder ());
-            final ColorEx faderColor = this.modifyIfOff (send.enabled (), configuration.getColorFader ());
-            final ColorEx editColor = this.modifyIfOff (send.enabled (), configuration.getColorEdit ());
+            final ColorEx faderColor = this.modifyIfOff (send.enabled (), configuration.usesCompactOrangeDisplay () ? OrangePanel.ACCENT : configuration.getColorFader ());
+            final ColorEx editColor = this.modifyIfOff (send.enabled (), configuration.usesCompactOrangeDisplay () ? this.channelAccent : configuration.getColorEdit ());
 
             gc.drawTextInBounds (sendName, faderLeft, topy + separatorSize, sliderWidth, sendRowHeight, Align.LEFT, textColor, sendRowHeight);
             topy += sendRowHeight;
@@ -137,7 +141,7 @@ public class SendsComponent extends ChannelSelectComponent
             final String text = send.text ();
             if (text.length () > 0)
             {
-                final ColorEx textColor = this.modifyIfOff (send.enabled (), configuration.getColorText ());
+                final ColorEx textColor = this.modifyIfOff (send.enabled (), configuration.usesCompactOrangeDisplay () ? ColorEx.WHITE : configuration.getColorText ());
                 final ColorEx borderColor = this.modifyIfOff (send.enabled (), configuration.getColorBorder ());
 
                 final double volumeTextTop = topy + sliderHeight + 1 + (this.isExMode ? 0 : separatorSize);

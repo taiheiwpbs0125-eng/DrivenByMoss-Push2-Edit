@@ -42,6 +42,9 @@ public interface IBrowser extends IObserverManagement
      */
     int getSelectedContentTypeIndex ();
 
+    /** Select a pane by its index in the host content type list. */
+    void selectContentType (int index);
+
 
     /**
      * Returns true if there is a previous content type.

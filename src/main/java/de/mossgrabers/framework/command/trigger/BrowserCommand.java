@@ -33,6 +33,12 @@ import de.mossgrabers.framework.view.sequencer.AbstractDrumView;
  */
 public class BrowserCommand<S extends IControlSurface<C>, C extends Configuration> extends AbstractTriggerCommand<S, C>
 {
+    /** Optional mode hook to validate and remember an explicit browser selection. */
+    public interface SelectionGuard
+    {
+        boolean prepareBrowserCommit ();
+    }
+
     private final ButtonID firstTrigger;
     private final ButtonID secondTrigger;
 
@@ -170,6 +176,8 @@ public class BrowserCommand<S extends IControlSurface<C>, C extends Configuratio
      */
     public void discardBrowser (final boolean commit)
     {
+        if (commit && this.surface.getModeManager ().getActive () instanceof SelectionGuard guard && !guard.prepareBrowserCommit ())
+            return;
         this.model.getBrowser ().stopBrowsing (commit);
 
         if (!commit)

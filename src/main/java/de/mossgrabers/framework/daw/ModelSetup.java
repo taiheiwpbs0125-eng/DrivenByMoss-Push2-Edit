@@ -37,6 +37,7 @@ public class ModelSetup
     private int                  numDrumPadLayers           = 16;
     private int                  numListParams              = 0;
     private boolean              wantsCursorLayer           = false;
+    private boolean              followsLauncherClipSelection;
     private boolean              wantsFocusedParameter      = false;
 
     private int                  numFilterColumnEntries     = 16;
@@ -509,6 +510,18 @@ public class ModelSetup
     public void setWantsFocusedParameter (final boolean wantsFocusedParameter)
     {
         this.wantsFocusedParameter = wantsFocusedParameter;
+    }
+
+
+    public boolean followsLauncherClipSelection ()
+    {
+        return this.followsLauncherClipSelection;
+    }
+
+
+    public void setFollowsLauncherClipSelection (final boolean followsLauncherClipSelection)
+    {
+        this.followsLauncherClipSelection = followsLauncherClipSelection;
     }
 
 

@@ -70,7 +70,7 @@ public class OptionsComponent implements IComponent
         if (configuration.usesCompactOrangeDisplay ())
         {
             final var b = info.getBounds ();
-            gc.fillRectangle (b.left (), 0, b.width (), b.height (), configuration.getColorBackgroundDarker ());
+            gc.fillRectangle (b.left (), 0, b.width (), b.height (), OrangePanel.BASE);
             this.header.draw (info.withBounds (0, 17));
             this.footer.draw (info.withBounds (b.height () - 17, 17));
             this.drawCaption (info, this.headerTop, 26, false);
@@ -115,11 +115,11 @@ public class OptionsComponent implements IComponent
         final var b = info.getBounds ();
         final var gc = info.getContext ();
         final var cfg = info.getConfiguration ();
-        final ColorEx fill = selected ? cfg.getColorEdit () : cfg.getColorBackground ();
-        final ColorEx ink = ColorEx.calcContrastColor (fill);
+        final ColorEx fill = selected ? OrangePanel.SELECTED : OrangePanel.BAND;
+        final ColorEx ink = ColorEx.WHITE;
         final double width = b.width () - 14;
         gc.fillRoundedRectangle (b.left () + 2, y, b.width () - 4, 42, 3, fill);
-        gc.fillRectangle (b.left () + 2, y + 4, 2, 34, cfg.getColorEdit ());
+        gc.fillRectangle (b.left () + 2, y + 4, 2, 34, OrangePanel.ACCENT);
         final double size = gc.calculateFontSize (text, 15, width, 11);
         int split = text.length ();
         if (size < 0)

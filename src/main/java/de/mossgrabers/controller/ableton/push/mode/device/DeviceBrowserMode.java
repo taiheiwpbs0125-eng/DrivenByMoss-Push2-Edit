@@ -35,12 +35,22 @@ import java.util.Optional;
  *
  * @author Jürgen Moßgraber
  */
-public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
+public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder, de.mossgrabers.framework.command.trigger.BrowserCommand.SelectionGuard
 {
     private static final int SELECTION_OFF    = 0;
     private static final int SELECTION_PRESET = 1;
     private static final int SELECTION_FILTER = 2;
 
+    private final SourcePicker sourcePicker = new SourcePicker ();
+    private final java.util.List<String> recent = new java.util.ArrayList<> ();
+    private String recentSelection;
+    private boolean browsingRecent;
+    private String lastTitle = "";
+    private long titleSince;
+    private boolean          pluginSource;
+    private int              nativeKind = -1;
+    private int              sourceRevision;
+    private boolean          firstTypeTurn;
     private int              selectionMode;
     private int              filterColumn;
 
@@ -64,6 +74,12 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
     @Override
     public void onDeactivate ()
     {
+        this.browsingRecent = false;
+        this.recentSelection = null;
+        this.sourcePicker.cancel ();
+        this.pluginSource = false;
+        this.nativeKind = -1;
+        this.sourceRevision++;
         super.onDeactivate ();
 
         this.model.getBrowser ().stopBrowsing (true);
@@ -79,7 +95,7 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
      */
     public void changeSelectedColumnValue (final int value)
     {
-        final int index = this.filterColumn == -1 ? 7 : this.filterColumn;
+        final int index = this.filterColumn == -1 ? (this.isPush2Browser () ? 6 : 7) : this.filterColumn;
         this.changeValue (index, value);
     }
 
@@ -100,7 +116,12 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
         if (!this.isKnobTouched (index))
             return;
 
-        if (this.increaseKnobMovement ())
+        if ((index == 1 || index == 5 && this.nativeKind >= 0) && this.firstTypeTurn)
+        {
+            this.firstTypeTurn = false;
+            this.changeValue (index, value);
+        }
+        else if (this.increaseKnobMovement ())
             this.changeValue (index, value);
     }
 
@@ -113,6 +134,45 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
         if (this.isAnyKnobTouched () && !this.isKnobTouched (index))
             return;
         this.setTouchedKnob (index, isTouched);
+
+        if (isTouched && this.isPush2Browser ())
+        {
+            this.browsingRecent = index == 7;
+            if (index >= 6)
+            {
+                this.filterColumn = index;
+                this.selectionMode = SELECTION_PRESET;
+                if (this.browsingRecent)
+                    this.chooseRecent (0);
+                return;
+            }
+        }
+
+        if (isTouched && index == 5 && this.nativeKind >= 0)
+        {
+            this.firstTypeTurn = true;
+            this.filterColumn = 5;
+            this.selectionMode = SELECTION_FILTER;
+            if (this.surface.isDeletePressed ())
+            {
+                this.surface.setTriggerConsumed (ButtonID.DELETE);
+                this.selectNativeKind (0);
+            }
+            return;
+        }
+
+        if (isTouched && index == 4 && this.pluginSource)
+        {
+            this.filterColumn = 4;
+            this.selectionMode = SELECTION_FILTER;
+            this.model.getApplication ().invokeAction ("focus_vendor_column");
+            if (this.surface.isDeletePressed ())
+            {
+                this.surface.setTriggerConsumed (ButtonID.DELETE);
+                this.model.getApplication ().invokeAction ("clear_focused_filter");
+            }
+            return;
+        }
 
         Optional<IBrowserColumn> fc;
         if (isTouched)
@@ -134,11 +194,10 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
 
         if (index == 1 && this.isPush2Browser ())
         {
-            final var browser = this.model.getBrowser ();
-            final var column = browser.getFilterColumn (1);
-            this.model.getHost ().println ("Push2 file kind: column=" + column.getName () + ", count=" + column.getEntryCount () +
-                ", cursor=" + column.getCursorName () + ", siblings=" + FileKinds.names (column.getItems ()) +
-                ", entries=" + FileKinds.names (column.getColumnEntries ()) + ", contentTypes=" + java.util.Arrays.toString (browser.getContentTypeNames ()));
+            this.firstTypeTurn = true;
+            this.filterColumn = 1;
+            this.selectionMode = SELECTION_FILTER;
+            return;
         }
         if (index == 7)
         {
@@ -174,7 +233,7 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
         }
 
 
-        if (this.surface.isShiftPressed () && index == 7)
+        if (this.surface.isShiftPressed () && index == (this.isPush2Browser () ? 6 : 7))
         {
             this.model.getBrowser ().togglePreviewEnabled ();
             return;
@@ -313,8 +372,15 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
             return;
         if (this.surface.getConfiguration ().getPushVersion () == de.mossgrabers.controller.ableton.push.PushVersion.VERSION_2)
         {
-            final int focus = this.selectionMode == SELECTION_OFF ? -1 : this.selectionMode == SELECTION_PRESET ? 7 : this.filterColumn;
-            display.addElement (OrangeBrowser.read (browser, focus, this.model.getHost ().supports (Capability.HAS_BROWSER_PREVIEW)));
+            int focus = this.selectionMode == SELECTION_OFF ? -1 : this.filterColumn;
+            OrangeBrowser frame = OrangeBrowser.read (browser, focus, this.pluginSource, this.nativeKind,
+                this.model.getHost ().supports (Capability.HAS_BROWSER_PREVIEW), this.recent, this.recentSelection);
+            if (!frame.title ().equals (this.lastTitle))
+            {
+                this.lastTitle = frame.title ();
+                this.titleSince = System.nanoTime ();
+            }
+            display.addElement (frame.scrollTitle ((System.nanoTime () - this.titleSince) / 1_000_000));
             return;
         }
 
@@ -484,6 +550,52 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
     }
 
 
+    private void chooseRecent (final int delta)
+    {
+        if (this.recent.isEmpty ()) return;
+        int current = this.recent.indexOf (this.recentSelection);
+        int next = Math.clamp (current < 0 ? 0 : current + delta, 0, this.recent.size () - 1);
+        this.recentSelection = this.recent.get (next);
+        var item = this.uniqueRecentMatch ();
+        if (item != null) item.select ();
+    }
+
+    private IBrowserColumnItem uniqueRecentMatch ()
+    {
+        IBrowserColumnItem match = null;
+        for (var item : this.model.getBrowser ().getResultColumnItems ())
+        {
+            if (!item.doesExist () || !item.getName ().equals (this.recentSelection)) continue;
+            if (match != null) return null;
+            match = item;
+        }
+        return match;
+    }
+
+    @Override
+    public boolean prepareBrowserCommit ()
+    {
+        if (!this.isPush2Browser ()) return true;
+        var browser = this.model.getBrowser ();
+        String name = browser.getSelectedResult ();
+        if (this.browsingRecent)
+        {
+            var item = this.uniqueRecentMatch ();
+            if (item == null || !item.isSelected () || !item.getName ().equals (name))
+            {
+                this.surface.getDisplay ().notify ("履歴の候補を特定できません。ノブ7で選択してください");
+                return false;
+            }
+        }
+        if (name != null && !name.isBlank ())
+        {
+            this.recent.remove (name);
+            this.recent.addFirst (name);
+            if (this.recent.size () > 24) this.recent.removeLast ();
+        }
+        return true;
+    }
+
     private boolean isPush2Browser ()
     {
         return this.surface.getConfiguration ().getPushVersion () == de.mossgrabers.controller.ableton.push.PushVersion.VERSION_2;
@@ -492,6 +604,17 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
     private void selectNext (final int index, final int count)
     {
         final IBrowser browser = this.model.getBrowser ();
+        if (this.isPush2Browser () && index >= 6)
+        {
+            this.filterColumn = index;
+            this.browsingRecent = index == 7;
+            if (this.browsingRecent)
+                this.chooseRecent (count);
+            else
+                for (int i = 0; i < count; i++)
+                    browser.selectNextResult ();
+            return;
+        }
         if (index < 7)
         {
             final Optional<IBrowserColumn> fc = this.getFilterColumn (index);
@@ -520,6 +643,17 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
     private void selectPrevious (final int index, final int count)
     {
         final IBrowser browser = this.model.getBrowser ();
+        if (this.isPush2Browser () && index >= 6)
+        {
+            this.filterColumn = index;
+            this.browsingRecent = index == 7;
+            if (this.browsingRecent)
+                this.chooseRecent (-count);
+            else
+                for (int i = 0; i < count; i++)
+                    browser.selectPreviousResult ();
+            return;
+        }
         if (index < 7)
         {
             final Optional<IBrowserColumn> fc = this.getFilterColumn (index);
@@ -545,9 +679,62 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
     }
 
 
+    private void selectNativeKind (final int kind)
+    {
+        final var browser = this.model.getBrowser ();
+        for (var item : browser.getFilterColumn (5).getItems ())
+        {
+            if (item.doesExist () && item.getIndex () == kind)
+            {
+                item.select ();
+                this.nativeKind = kind;
+                return;
+            }
+        }
+    }
+
     private void changeValue (final int index, final int value)
     {
+        if (index < 7 && this.isPush2Browser ()) this.browsingRecent = false;
         int speed = this.model.getValueChanger ().calcSteppedKnobChange (value);
+        if (index == 5 && this.nativeKind >= 0)
+        {
+            final int next = Math.clamp (this.nativeKind + Integer.signum (speed), 0, 3);
+            if (next != this.nativeKind)
+                this.selectNativeKind (next);
+            return;
+        }
+        if (index == 4 && this.pluginSource && this.model.getBrowser ().isActive ())
+        {
+            if (speed > 0)
+                this.model.getApplication ().arrowKeyDown ();
+            else if (speed < 0)
+                this.model.getApplication ().arrowKeyUp ();
+            return;
+        }
+        if (index == 1 && this.isPush2Browser ())
+        {
+            final int current = this.pluginSource ? 2 : this.nativeKind >= 0 ? 1 : 0;
+            final int next = Math.clamp (current + Integer.signum (speed), 0, 2);
+            if (next == current && next != 0)
+                return;
+            final int revision = ++this.sourceRevision;
+            this.pluginSource = next == 2;
+            this.nativeKind = next == 1 ? 0 : -1;
+            this.model.getApplication ().invokeAction (this.pluginSource ? "select_quick_source4" : "select_everything");
+            if (!this.pluginSource)
+                this.model.getHost ().scheduleTask (() -> {
+                    if (revision != this.sourceRevision || !this.model.getBrowser ().isActive ())
+                        return;
+                    this.model.getApplication ().invokeAction ("focus_file_kind_or_type_column");
+                    this.model.getApplication ().invokeAction ("clear_focused_filter");
+                    if (next == 1)
+                        this.model.getApplication ().arrowKeyDown ();
+                    this.model.getBrowser ().resetFilterColumn (5);
+                }, 150);
+            this.filterColumn = 1;
+            return;
+        }
         final boolean direction = speed > 0;
         if (this.surface.isShiftPressed ())
             speed = speed * 4;
@@ -586,6 +773,7 @@ public class DeviceBrowserMode extends BaseMode<IItem> implements IPush3Encoder
 
         final boolean commit = !this.surface.isShiftPressed ();
 
+        if (commit && !this.prepareBrowserCommit ()) return;
         this.model.getBrowser ().stopBrowsing (commit);
 
         if (!commit)

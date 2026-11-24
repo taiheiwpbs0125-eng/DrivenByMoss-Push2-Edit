@@ -131,6 +131,13 @@ public class BrowserImpl extends AbstractBrowser
 
     /** {@inheritDoc} */
     @Override
+    public void selectContentType (final int index)
+    {
+        this.browser.selectedContentTypeIndex ().set (index);
+    }
+
+
+    @Override
     public void previousContentType ()
     {
         this.browser.selectedContentTypeIndex ().inc (-1);

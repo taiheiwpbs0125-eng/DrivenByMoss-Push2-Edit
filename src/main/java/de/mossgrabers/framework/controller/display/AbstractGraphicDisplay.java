@@ -4,6 +4,7 @@
 
 package de.mossgrabers.framework.controller.display;
 
+import de.mossgrabers.framework.graphics.canvas.component.Push2ModeNotice;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -477,6 +478,11 @@ public abstract class AbstractGraphicDisplay implements IGraphicDisplay
             if (notification == null)
                 return;
 
+            if (this.configuration.usesCompactOrangeDisplay () && "Project/Track Controls".equals (notification))
+            {
+                Push2ModeNotice.USER.draw (graphicsInfo.withBounds (0, 0, width, height));
+                return;
+            }
             final ColorEx colorText = this.configuration.getColorText ();
             gc.drawTextInBounds (notification, 0, 0, width, height, Align.CENTER, colorText, ColorEx.calcContrastColor (colorText), height / 4.0);
 

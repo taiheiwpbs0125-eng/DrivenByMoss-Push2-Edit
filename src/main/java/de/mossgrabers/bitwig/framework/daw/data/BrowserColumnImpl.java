@@ -34,6 +34,7 @@ public class BrowserColumnImpl extends AbstractItemImpl implements IBrowserColum
      * @param index The index of the column
      * @param numFilterColumnEntries The number of entries in a filter column (bank page)
      */
+    private BrowserItemBank<?> entriesBank;
     private final IBrowserColumnItem [] columnEntries;
 
     public BrowserColumnImpl (final BrowserFilterColumn column, final int index, final int numFilterColumnEntries)
@@ -55,11 +56,14 @@ public class BrowserColumnImpl extends AbstractItemImpl implements IBrowserColum
             this.items[i] = new BrowserColumnItemImpl (this.itemBank.getItemAt (i), i);
 
         // The File Type cursor may sit on a wildcard without visible siblings.
-        this.columnEntries = index == 1 ? new IBrowserColumnItem[numFilterColumnEntries] : this.items;
-        if (index == 1)
+        this.columnEntries = index <= 1 ? new IBrowserColumnItem[numFilterColumnEntries] : this.items;
+        if (index <= 1)
         {
             column.entryCount ().markInterested ();
             final var bank = column.createItemBank (numFilterColumnEntries);
+            this.entriesBank = bank;
+            bank.canScrollForwards ().markInterested ();
+            bank.scrollPosition ().markInterested ();
             for (int i = 0; i < numFilterColumnEntries; i++)
                 this.columnEntries[i] = new BrowserColumnItemImpl (bank.getItemAt (i), i);
         }
@@ -167,6 +171,19 @@ public class BrowserColumnImpl extends AbstractItemImpl implements IBrowserColum
     /** {@inheritDoc} */
     @Override
     public IBrowserColumnItem [] getColumnEntries () { return this.columnEntries; }
+
+    @Override
+    public void scrollEntriesToStart () { this.entriesBank.scrollPosition ().set (0); }
+
+    @Override
+    public int entriesPosition () { return this.entriesBank.scrollPosition ().get (); }
+
+    @Override
+    public boolean nextEntriesPage () {
+        if (!this.entriesBank.canScrollForwards ().get ()) return false;
+        this.entriesBank.scrollPageForwards ();
+        return true;
+    }
 
     @Override
     public int getEntryCount () { return this.columnEntries == this.items ? -1 : this.column.entryCount ().get (); }

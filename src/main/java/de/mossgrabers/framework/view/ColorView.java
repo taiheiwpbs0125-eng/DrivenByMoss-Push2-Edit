@@ -147,7 +147,7 @@ public class ColorView<S extends IControlSurface<C>, C extends Configuration> ex
                     break;
 
                 case MODE_CLIP:
-                    final IClip clip = this.model.getCursorClip ();
+                    final IClip clip = this.model.getClipForEditing ();
                     if (clip.doesExist ())
                         clip.setColor (entry);
                     break;

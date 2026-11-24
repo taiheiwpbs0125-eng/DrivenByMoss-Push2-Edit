@@ -45,7 +45,8 @@ public class CursorClipImpl implements INoteClip
     private final int                numRows;
 
     private final IStepInfo [] [] [] launcherData;
-    private final PinnableCursorClip launcherClip;
+    private final Clip               launcherClip;
+    private final PinnableCursorClip pinnableClip;
     private int                      editPage        = 0;
     private double                   stepLength;
     private final List<NotePosition> editSteps       = new ArrayList<> ();
@@ -62,6 +63,12 @@ public class CursorClipImpl implements INoteClip
      */
     public CursorClipImpl (final IHost host, final CursorTrack cursorTrack, final IValueChanger valueChanger, final int numSteps, final int numRows)
     {
+        this (host, cursorTrack.createLauncherCursorClip (numSteps, numRows), valueChanger, numSteps, numRows);
+    }
+
+
+    CursorClipImpl (final IHost host, final Clip clip, final IValueChanger valueChanger, final int numSteps, final int numRows)
+    {
         this.host = host;
         this.valueChanger = valueChanger;
 
@@ -71,8 +78,8 @@ public class CursorClipImpl implements INoteClip
 
         this.launcherData = new IStepInfo [16] [this.numSteps] [];
 
-        // TODO Bugfix required: https://github.com/teotigraphix/Framework4Bitwig/issues/140
-        this.launcherClip = cursorTrack.createLauncherCursorClip (this.numSteps, this.numRows);
+        this.launcherClip = clip;
+        this.pinnableClip = clip instanceof final PinnableCursorClip pinnable ? pinnable : null;
 
         this.launcherClip.addNoteStepObserver (this::handleStepData);
 
@@ -88,7 +95,8 @@ public class CursorClipImpl implements INoteClip
         this.launcherClip.canScrollStepsBackwards ().markInterested ();
         this.launcherClip.canScrollStepsForwards ().markInterested ();
         this.launcherClip.color ().markInterested ();
-        this.launcherClip.isPinned ().markInterested ();
+        if (this.pinnableClip != null)
+            this.pinnableClip.isPinned ().markInterested ();
 
         this.launcherClip.getTrack ().canHoldNoteData ().markInterested ();
     }
@@ -110,7 +118,8 @@ public class CursorClipImpl implements INoteClip
         Util.setIsSubscribed (this.launcherClip.canScrollStepsBackwards (), enable);
         Util.setIsSubscribed (this.launcherClip.canScrollStepsForwards (), enable);
         Util.setIsSubscribed (this.launcherClip.color (), enable);
-        Util.setIsSubscribed (this.launcherClip.isPinned (), enable);
+        if (this.pinnableClip != null)
+            Util.setIsSubscribed (this.pinnableClip.isPinned (), enable);
         Util.setIsSubscribed (this.launcherClip.getTrack ().canHoldNoteData (), enable);
     }
 
@@ -152,7 +161,7 @@ public class CursorClipImpl implements INoteClip
     @Override
     public boolean isPinned ()
     {
-        return this.launcherClip.isPinned ().get ();
+        return this.pinnableClip != null && this.pinnableClip.isPinned ().get ();
     }
 
 
@@ -160,7 +169,8 @@ public class CursorClipImpl implements INoteClip
     @Override
     public void togglePinned ()
     {
-        this.launcherClip.isPinned ().toggle ();
+        if (this.pinnableClip != null)
+            this.pinnableClip.isPinned ().toggle ();
     }
 
 
@@ -168,7 +178,8 @@ public class CursorClipImpl implements INoteClip
     @Override
     public void setPinned (final boolean isPinned)
     {
-        this.launcherClip.isPinned ().set (isPinned);
+        if (this.pinnableClip != null)
+            this.pinnableClip.isPinned ().set (isPinned);
     }
 
 
@@ -1357,5 +1368,13 @@ public class CursorClipImpl implements INoteClip
     {
         // Note: Keep this in a function in case the issue with arranger clips gets ever fixed
         return this.launcherData;
+    }
+
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean supportsNoteData ()
+    {
+        return this.getClip ().getTrack ().canHoldNoteData ().get ();
     }
 }

@@ -598,6 +598,13 @@ public interface INoteClip extends IClip, IPinnable
     void scrollToPage (int page);
 
 
+    /** Whether the current clip's track supports note data. */
+    default boolean supportsNoteData ()
+    {
+        return true;
+    }
+
+
     /**
      * Get the edit page.
      *

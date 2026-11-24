@@ -74,12 +74,12 @@ public class LabelComponent implements IComponent
             final var b = info.getBounds ();
             final double y = b.top () == 0 ? 0 : b.top () + Math.max (0, b.height () - 17);
             final var cfg = info.getConfiguration ();
-            final ColorEx bg = this.isSelected ? cfg.getColorEdit () : cfg.getColorBackground ();
+            final ColorEx bg = this.isSelected ? OrangePanel.SELECTED : OrangePanel.BAND;
             final var gc = info.getContext ();
             gc.fillRectangle (b.left (), y, b.width (), 17, bg);
             if (this.backgroundColor != null)
-                gc.fillRectangle (b.left (), y + 15, b.width (), 2, this.backgroundColor);
-            gc.drawTextInBounds (this.text, b.left () + 3, y, b.width () - 6, 17, Align.CENTER, ColorEx.calcContrastColor (bg), 11);
+                gc.fillRectangle (b.left (), y + 15, b.width (), 2, new ColorEx (0.22 + 0.30 * this.backgroundColor.getRed (), 0.22 + 0.30 * this.backgroundColor.getGreen (), 0.22 + 0.30 * this.backgroundColor.getBlue ()));
+            gc.drawTextInBounds (this.text, b.left () + 3, y, b.width () - 6, 17, Align.CENTER, ColorEx.WHITE, 11);
             return;
         }
         if (this.layout == LabelLayout.COLORED)

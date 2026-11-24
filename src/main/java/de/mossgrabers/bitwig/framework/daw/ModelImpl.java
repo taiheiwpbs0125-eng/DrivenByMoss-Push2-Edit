@@ -15,6 +15,7 @@ import com.bitwig.extension.controller.api.BooleanValue;
 import com.bitwig.extension.controller.api.ControllerHost;
 import com.bitwig.extension.controller.api.CursorDeviceFollowMode;
 import com.bitwig.extension.controller.api.CursorDeviceLayer;
+import com.bitwig.extension.controller.api.CursorClip;
 import com.bitwig.extension.controller.api.CursorTrack;
 import com.bitwig.extension.controller.api.Device;
 import com.bitwig.extension.controller.api.DeviceBank;
@@ -69,6 +70,8 @@ public class ModelImpl extends AbstractModel
     private final ControllerHost           controllerHost;
     private final CursorTrack              bwCursorTrack;
     private final Track                    rootTrackGroup;
+    private final CursorClipImpl           selectedLauncherClip;
+    private final CursorClipImpl           pinnedLauncherClip;
     private final BooleanValue             masterTrackEqualsValue;
     private final Map<Integer, ISceneBank> sceneBanks              = HashMap.newHashMap (1);
     private final Map<Integer, ISlotBank>  slotBanks               = HashMap.newHashMap (1);
@@ -118,6 +121,19 @@ public class ModelImpl extends AbstractModel
 
         final TrackBank tb;
         this.bwCursorTrack = controllerHost.createCursorTrack ("MyCursorTrackID", "The Cursor Track", numSends, numScenes, true);
+        if (modelSetup.followsLauncherClipSelection ())
+        {
+            final int steps = 32;
+            final int rows = 128;
+            this.selectedLauncherClip = new CursorClipImpl (this.host, controllerHost.createLauncherCursorClip (steps, rows), this.valueChanger, steps, rows);
+            this.pinnedLauncherClip = new CursorClipImpl (this.host,
+                this.bwCursorTrack.createLauncherCursorClip ("Push2ClipEditor", "Push 2 Clip Editor", steps, rows), this.valueChanger, steps, rows);
+        }
+        else
+        {
+            this.selectedLauncherClip = null;
+            this.pinnedLauncherClip = null;
+        }
         final int numTracks = this.modelSetup.getNumTracks ();
         if (this.modelSetup.hasFlatTrackList ())
         {
@@ -169,7 +185,7 @@ public class ModelImpl extends AbstractModel
             final DeviceMatcher drumMachineDeviceMatcher = controllerHost.createBitwigDeviceMatcher (INSTRUMENT_DRUM_MACHINE);
             final DeviceBank drumDeviceBank = this.bwCursorTrack.createDeviceBank (1);
             drumDeviceBank.setDeviceMatcher (drumMachineDeviceMatcher);
-            final Device drumMachineDevice = drumDeviceBank.getItemAt (0);
+            final Device drumMachineDevice = (Device) drumDeviceBank.getItemAt (0);
             this.drumDevice = new DrumDeviceImpl (this.host, this.valueChanger, drumMachineDevice, numSends, numParamPages, numParams, numDevicesInBank, numDeviceLayers, numDrumPadLayers);
 
             // Additional drum machines with different drum pad page sizes
@@ -242,7 +258,7 @@ public class ModelImpl extends AbstractModel
     {
         final DeviceBank deviceBank = this.bwCursorTrack.createDeviceBank (1);
         deviceBank.setDeviceMatcher (deviceMatcher);
-        return deviceBank.getItemAt (0);
+        return (Device) deviceBank.getItemAt (0);
     }
 
 
@@ -330,6 +346,36 @@ public class ModelImpl extends AbstractModel
         if (this.cursorClips.isEmpty ())
             throw new FrameworkException ("No cursor clip created!");
         return this.cursorClips.values ().iterator ().next ();
+    }
+
+
+    /** {@inheritDoc} */
+    @Override
+    public INoteClip getClipForEditing ()
+    {
+        if (this.selectedLauncherClip == null)
+            return this.getCursorClip ();
+        return this.pinnedLauncherClip.isPinned () ? this.pinnedLauncherClip : this.selectedLauncherClip;
+    }
+
+
+    /** {@inheritDoc} */
+    @Override
+    public void toggleCursorClipPin ()
+    {
+        if (this.pinnedLauncherClip == null)
+        {
+            this.getCursorClip ().togglePinned ();
+            return;
+        }
+
+        if (this.pinnedLauncherClip.isPinned ())
+            this.pinnedLauncherClip.setPinned (false);
+        else if (this.selectedLauncherClip.doesExist ())
+        {
+            ((CursorClip) this.pinnedLauncherClip.getClip ()).selectClip (this.selectedLauncherClip.getClip ());
+            this.pinnedLauncherClip.setPinned (true);
+        }
     }
 
 

@@ -9,6 +9,12 @@ import de.mossgrabers.framework.daw.data.IBrowserColumnItem;
 final class FileKinds {
     private FileKinds() {}
 
+    static boolean usesContentTypes(de.mossgrabers.framework.daw.IBrowser browser) {
+        var column = browser.getFilterColumn(1);
+        return browser.getContentTypeNames().length > 0 && column.getEntryCount() == 0
+            && !hasChoice(visible(column), column.getWildcard());
+    }
+
     static String names(IBrowserColumnItem[] items) {
         return Arrays.stream(items).filter(IBrowserColumnItem::doesExist)
             .map(IBrowserColumnItem::getName).collect(Collectors.joining(", "));

@@ -130,10 +130,11 @@ public class ChannelComponent extends ChannelSelectComponent
         final double panHeight = unit - separatorSize;
         final double panTextTop = panTop + panHeight;
 
+        final boolean compact = configuration.usesCompactOrangeDisplay ();
         final double faderOffset = controlWidth / 4;
         final double faderTop = panTop + panHeight + separatorSize + 1;
-        final double vuX = controlStart + separatorSize;
-        final double faderLeft = vuX + faderOffset;
+        final double vuX = compact ? controlStart + controlWidth - faderOffset : controlStart + separatorSize;
+        final double faderLeft = compact ? controlStart + controlWidth / 3 : vuX + faderOffset;
         final double faderHeight = trackRowTop - faderTop - inset + 1;
         final double faderInnerHeight = faderHeight - 2 * separatorSize;
 
@@ -144,25 +145,29 @@ public class ChannelComponent extends ChannelSelectComponent
         // Drawing
         //
 
-        final ColorEx textColor = this.modifyIfOff (configuration.getColorText ());
+        final ColorEx textColor = this.modifyIfOff (compact ? ColorEx.WHITE : configuration.getColorText ());
 
         final String name = this.footer.getText ();
         // Element is off if the name is empty
         if (name == null || name.length () == 0)
             return;
 
-        final ColorEx backgroundColor = this.modifyIfOff (configuration.getMixerPanelColor (this.footer.isSelected ()));
+        final ColorEx backgroundColor = this.modifyIfOff (configuration.getColorBackground ());
 
         // Draw the background
-        gc.fillRectangle (left, menuHeight + 1, width, trackRowTop - (menuHeight - 1), backgroundColor);
+        final boolean selectedPanel = this.footer.isSelected ();
+        final ColorEx panelColor = configuration.usesCompactOrangeDisplay ()
+            ? this.modifyIfOff (!this.volumeText.isEmpty () || !this.panText.isEmpty () ? OrangePanel.TOUCHED : OrangePanel.BASE)
+            : selectedPanel ? this.modifyIfOff (configuration.getColorBackgroundLighter ()) : backgroundColor;
+        gc.fillRectangle (left, menuHeight + 1, width, trackRowTop - (menuHeight - 1), panelColor);
 
         // Background of pan and slider area
         final ColorEx borderColor = this.modifyIfOff (configuration.getColorBorder ());
         gc.fillRectangle (controlStart, controlsTop, halfWidth - unit + halfUnit / 2, unit, borderColor);
-        gc.fillRectangle (controlStart, faderTop, controlWidth, faderHeight, borderColor);
+        gc.fillRectangle (compact ? faderLeft : controlStart, faderTop, compact ? 5 : controlWidth, faderHeight, borderColor);
 
         final ColorEx backgroundDarker = this.modifyIfOff (configuration.getColorBackgroundDarker ());
-        final ColorEx editColor = this.modifyIfOff (configuration.getColorEdit ());
+        final ColorEx editColor = this.modifyIfOff (compact ? this.channelAccent : configuration.getColorEdit ());
 
         // Crossfader A|B
         final double leftColumn = left + inset - 1;
@@ -203,7 +208,7 @@ public class ChannelComponent extends ChannelSelectComponent
         else
             vMod = v;
 
-        final ColorEx faderColor = this.modifyIfOff (configuration.getColorFader ());
+        final ColorEx faderColor = this.modifyIfOff (compact ? OrangePanel.ACCENT : configuration.getColorFader ());
         final boolean rightMod = isPanModulated ? isModulatedRight : isRight;
         gc.fillRectangle (rightMod ? panMiddle + 1 : panMiddle - vMod, controlsTop + 1, vMod, panHeight, faderColor);
 
@@ -216,7 +221,7 @@ public class ChannelComponent extends ChannelSelectComponent
 
         // Volume slider
         // Ensure that maximum value is reached even if rounding errors happen
-        final double volumeWidth = controlWidth - 2 * separatorSize - faderOffset;
+        final double volumeWidth = compact ? 5 : controlWidth - 2 * separatorSize - faderOffset;
         final double volumeHeight = this.volumeValue >= maxValue - 1 ? faderInnerHeight : faderInnerHeight * this.volumeValue / maxValue;
         final boolean isVolumeModulated = this.modulatedVolumeValue != -1;
         final double modulatedVolumeHeight;
@@ -235,10 +240,10 @@ public class ChannelComponent extends ChannelSelectComponent
         gc.fillRectangle (faderLeft, modulatedVolumeTop, volumeWidth, modulatedVolumeHeight, faderColor);
 
         final boolean isVolumeTouched = this.volumeText.length () > 0;
-        if (this.editType == EDIT_TYPE_VOLUME || this.editType == EDIT_TYPE_ALL)
+        if (compact || this.editType == EDIT_TYPE_VOLUME || this.editType == EDIT_TYPE_ALL)
         {
-            final double h = isVolumeTouched ? 3 : 1;
-            gc.fillRectangle (faderLeft, Math.min (volumeTop + volumeHeight - h, volumeTop), volumeWidth, h, editColor);
+            final double h = isVolumeTouched || compact ? 3 : 1;
+            gc.fillRectangle (compact ? faderLeft - 4 : faderLeft, Math.min (volumeTop + volumeHeight - h, volumeTop), compact ? volumeWidth + 8 : volumeWidth, h, compact ? faderColor : editColor);
         }
 
         // VU
@@ -340,8 +345,17 @@ public class ChannelComponent extends ChannelSelectComponent
 
         if (isOn)
             gc.fillRoundedRectangle (left + 1, top + 1, width - 2, height - 2, radius, isOnColor);
+        else if (configuration.usesCompactOrangeDisplay ())
+            gc.fillRoundedRectangle (left + 1, top + 1, width - 2, height - 2, radius, OrangePanel.BAND);
         else
             gc.fillGradientRoundedRectangle (left + 1, top + 1, width - 2, height - 2, radius, backgroundColor, ColorEx.brighter (backgroundColor));
+
+        if (configuration.usesCompactOrangeDisplay () && radius > 0 && height >= 4)
+        {
+            final ColorEx face = isOn ? isOnColor : OrangePanel.BAND;
+            final ColorEx edge = new ColorEx (0.16 + 0.84 * face.getRed (), 0.16 + 0.84 * face.getGreen (), 0.16 + 0.84 * face.getBlue ());
+            gc.fillRectangle (left + 2, top + 1, width - 4, 1, edge);
+        }
 
         final IImage icon = ResourceHandler.getSVGImage (iconName);
         gc.maskImage (icon, left + (width - icon.getWidth ()) / 2, top + (height - icon.getHeight ()) / 2, isOn ? borderColor : textColor);

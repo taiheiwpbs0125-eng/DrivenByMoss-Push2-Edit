@@ -17,6 +17,8 @@ import java.util.EnumMap;
  */
 public class ChannelSelectComponent extends MenuComponent
 {
+    protected final ColorEx channelAccent;
+
     private static final EnumMap<ChannelType, String> ICONS = new EnumMap<> (ChannelType.class);
 
     static
@@ -46,6 +48,7 @@ public class ChannelSelectComponent extends MenuComponent
     public ChannelSelectComponent (final ChannelType type, final String menuName, final boolean isMenuSelected, final String name, final ColorEx color, final boolean isSelected, final boolean isActive)
     {
         super (menuName, isMenuSelected, name, getIcon (type, false), color, isSelected, isActive);
+        this.channelAccent = color == null ? OrangePanel.ACCENT : color;
     }
 
 
@@ -64,6 +67,7 @@ public class ChannelSelectComponent extends MenuComponent
     public ChannelSelectComponent (final ChannelType type, final String menuName, final boolean isMenuSelected, final String name, final ColorEx color, final boolean isSelected, final boolean isActive, final boolean isPinned)
     {
         super (menuName, isMenuSelected, name, getIcon (type, isPinned), color, isSelected, isActive);
+        this.channelAccent = color == null ? OrangePanel.ACCENT : color;
     }
 
 
