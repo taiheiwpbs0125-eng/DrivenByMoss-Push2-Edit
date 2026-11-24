@@ -72,6 +72,8 @@ public class ModelImpl extends AbstractModel
     private final Track                    rootTrackGroup;
     private final CursorClipImpl           selectedLauncherClip;
     private final CursorClipImpl           pinnedLauncherClip;
+    private final CursorTrack              clipPinTrack;
+    private int                            clipPinRequest;
     private final BooleanValue             masterTrackEqualsValue;
     private final Map<Integer, ISceneBank> sceneBanks              = HashMap.newHashMap (1);
     private final Map<Integer, ISlotBank>  slotBanks               = HashMap.newHashMap (1);
@@ -126,13 +128,21 @@ public class ModelImpl extends AbstractModel
             final int steps = 32;
             final int rows = 128;
             this.selectedLauncherClip = new CursorClipImpl (this.host, controllerHost.createLauncherCursorClip (steps, rows), this.valueChanger, steps, rows);
+            this.clipPinTrack = controllerHost.createCursorTrack ("Push2PinnedClipTrack", "Push 2 Pinned Clip Track", 0, 0, false);
+            this.clipPinTrack.position ().markInterested ();
             this.pinnedLauncherClip = new CursorClipImpl (this.host,
-                this.bwCursorTrack.createLauncherCursorClip ("Push2ClipEditor", "Push 2 Clip Editor", steps, rows), this.valueChanger, steps, rows);
+                this.clipPinTrack.createLauncherCursorClip ("Push2ClipEditor", "Push 2 Clip Editor", steps, rows), this.valueChanger, steps, rows);
+            for (final CursorClipImpl clip: new CursorClipImpl [] { this.selectedLauncherClip, this.pinnedLauncherClip })
+            {
+                clip.getClip ().getTrack ().position ().markInterested ();
+                clip.getClip ().clipLauncherSlot ().sceneIndex ().markInterested ();
+            }
         }
         else
         {
             this.selectedLauncherClip = null;
             this.pinnedLauncherClip = null;
+            this.clipPinTrack = null;
         }
         final int numTracks = this.modelSetup.getNumTracks ();
         if (this.modelSetup.hasFlatTrackList ())
@@ -369,13 +379,49 @@ public class ModelImpl extends AbstractModel
             return;
         }
 
+        final int request = ++this.clipPinRequest;
         if (this.pinnedLauncherClip.isPinned ())
-            this.pinnedLauncherClip.setPinned (false);
-        else if (this.selectedLauncherClip.doesExist ())
         {
-            ((CursorClip) this.pinnedLauncherClip.getClip ()).selectClip (this.selectedLauncherClip.getClip ());
-            this.pinnedLauncherClip.setPinned (true);
+            this.pinnedLauncherClip.setPinned (false);
+            return;
         }
+
+        if (!this.selectedLauncherClip.doesExist ())
+            return;
+
+        final var selected = this.selectedLauncherClip.getClip ();
+        final int track = selected.getTrack ().position ().get ();
+        final int scene = selected.clipLauncherSlot ().sceneIndex ().get ();
+        if (track < 0 || scene < 0)
+            return;
+
+        this.clipPinTrack.selectChannel (selected.getTrack ());
+        this.finishClipPin (request, track, scene, 12);
+    }
+
+
+    private void finishClipPin (final int request, final int track, final int scene, final int retries)
+    {
+        if (this.clipPinRequest != request || !this.selectedLauncherClip.doesExist ())
+            return;
+
+        final var selected = this.selectedLauncherClip.getClip ();
+        if (selected.getTrack ().position ().get () != track || selected.clipLauncherSlot ().sceneIndex ().get () != scene)
+            return;
+
+        final CursorClip target = (CursorClip) this.pinnedLauncherClip.getClip ();
+        if (this.pinnedLauncherClip.doesExist () && target.getTrack ().position ().get () == track && target.clipLauncherSlot ().sceneIndex ().get () == scene)
+        {
+            this.pinnedLauncherClip.setPinned (true);
+            return;
+        }
+
+        if (retries <= 0)
+            return;
+
+        if (this.clipPinTrack.position ().get () == track)
+            target.selectClip (selected);
+        this.host.scheduleTask (() -> this.finishClipPin (request, track, scene, retries - 1), 25);
     }
 
 
